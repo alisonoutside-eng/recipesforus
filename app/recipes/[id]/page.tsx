@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecipeById } from "@/actions/recipes";
 import { photoServingUrl } from "@/lib/photoUrl";
+import { DeleteRecipeButton } from "@/components/DeleteRecipeButton";
 
 export const dynamic = "force-dynamic";
 
@@ -22,11 +23,22 @@ export default async function RecipePage({
         ← Back to all recipes
       </Link>
 
-      <div>
-        <h1 className="text-2xl font-semibold">{recipe.title}</h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          {recipe.categoryName} · added by {recipe.addedBy}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">{recipe.title}</h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {recipe.categoryName} · added by {recipe.addedBy}
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href={`/recipes/${id}/edit`}
+            className="rounded-full border border-black/15 px-4 py-2 text-sm font-medium dark:border-white/20"
+          >
+            Edit
+          </Link>
+          <DeleteRecipeButton id={id} />
+        </div>
       </div>
 
       {recipe.bodyType === "photo" ? (

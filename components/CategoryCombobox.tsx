@@ -1,6 +1,12 @@
 type Category = { name: string; slug: string };
 
-export function CategoryCombobox({ categories }: { categories: Category[] }) {
+export function CategoryCombobox({
+  categories,
+  defaultValue,
+}: {
+  categories: Category[];
+  defaultValue?: string;
+}) {
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor="category" className="text-sm font-medium">
@@ -11,6 +17,7 @@ export function CategoryCombobox({ categories }: { categories: Category[] }) {
         name="category"
         list="category-options"
         required
+        defaultValue={defaultValue}
         placeholder="e.g. Dessert"
         autoComplete="off"
         className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"

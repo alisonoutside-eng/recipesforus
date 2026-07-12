@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createPhotoRecipe } from "@/actions/recipes";
+import { createPhotoRecipe, updatePhotoRecipe } from "@/actions/recipes";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
 import { AddedByField } from "@/components/AddedByField";
 
@@ -31,7 +31,21 @@ async function compressImage(file: File): Promise<Blob> {
   });
 }
 
-export function PhotoUploadForm({ categories }: { categories: Category[] }) {
+type PhotoUploadFormProps = {
+  categories: Category[];
+  recipeId?: string;
+  initialValues?: {
+    title: string;
+    categoryName: string;
+    addedBy: string;
+  };
+};
+
+export function PhotoUploadForm({
+  categories,
+  recipeId,
+  initialValues,
+}: PhotoUploadFormProps) {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +61,7 @@ export function PhotoUploadForm({ categories }: { categories: Category[] }) {
     const category = String(formData.get("category") ?? "");
     const addedBy = String(formData.get("addedBy") ?? "");
 
-    if (!title || !category || !addedBy || files.length === 0) {
+    if (!title || !category || !addedBy || (!recipeId && files.length === 0)) {
       setError("Please fill in every field and choose at least one photo.");
       return;
     }
@@ -73,13 +87,23 @@ export function PhotoUploadForm({ categories }: { categories: Category[] }) {
         photoUrls.push(pathname);
       }
 
-      const recipeId = await createPhotoRecipe({
-        title,
-        category,
-        addedBy,
-        photoUrls,
-      });
-      router.push(`/recipes/${recipeId}`);
+      if (recipeId) {
+        await updatePhotoRecipe(recipeId, {
+          title,
+          category,
+          addedBy,
+          photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
+        });
+        router.push(`/recipes/${recipeId}`);
+      } else {
+        const newRecipeId = await createPhotoRecipe({
+          title,
+          category,
+          addedBy,
+          photoUrls,
+        });
+        router.push(`/recipes/${newRecipeId}`);
+      }
     } catch (err) {
       setError((err as Error).message || "Upload failed. Please try again.");
     } finally {
@@ -97,17 +121,23 @@ export function PhotoUploadForm({ categories }: { categories: Category[] }) {
           id="title"
           name="title"
           required
+          defaultValue={initialValues?.title}
           placeholder="e.g. Grandma's Pot Roast"
           className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
         />
       </div>
 
-      <CategoryCombobox categories={categories} />
-      <AddedByField />
+      <CategoryCombobox
+        categories={categories}
+        defaultValue={initialValues?.categoryName}
+      />
+      <AddedByField defaultValue={initialValues?.addedBy} />
 
       <div className="flex flex-col gap-1">
         <label htmlFor="photos" className="text-sm font-medium">
-          Photo(s) of the recipe
+          {recipeId
+            ? "Replace photo(s) (leave empty to keep current)"
+            : "Photo(s) of the recipe"}
         </label>
         <input
           id="photos"
@@ -134,7 +164,11 @@ export function PhotoUploadForm({ categories }: { categories: Category[] }) {
         disabled={isSubmitting}
         className="mt-2 rounded-full bg-foreground px-5 py-3 font-medium text-background disabled:opacity-60"
       >
-        {isSubmitting ? "Uploading…" : "Save recipe"}
+        {isSubmitting
+          ? "Uploading…"
+          : recipeId
+            ? "Save changes"
+            : "Save recipe"}
       </button>
     </form>
   );

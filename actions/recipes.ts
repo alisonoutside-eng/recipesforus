@@ -6,6 +6,7 @@ import { findOrCreateCategory } from "@/actions/categories";
 import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { del } from "@vercel/blob";
 
 export async function getRecipes(categorySlug?: string) {
   const rows = await db
@@ -106,4 +107,99 @@ export async function createPhotoRecipe(input: {
 
   revalidatePath("/");
   return recipe.id as string;
+}
+
+export async function updateTypedRecipe(id: string, formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim();
+  const categoryName = String(formData.get("category") ?? "").trim();
+  const addedBy = String(formData.get("addedBy") ?? "").trim();
+  const ingredients = String(formData.get("ingredients") ?? "").trim();
+  const instructions = String(formData.get("instructions") ?? "").trim();
+
+  if (!title || !categoryName || !addedBy || !ingredients || !instructions) {
+    throw new Error("All fields are required");
+  }
+
+  const category = await findOrCreateCategory(categoryName);
+
+  await db
+    .update(recipes)
+    .set({
+      title,
+      categoryId: category.id,
+      addedBy,
+      ingredients,
+      instructions,
+    })
+    .where(eq(recipes.id, id));
+
+  revalidatePath("/");
+  revalidatePath(`/recipes/${id}`);
+  redirect(`/recipes/${id}`);
+}
+
+export async function updatePhotoRecipe(
+  id: string,
+  input: {
+    title: string;
+    category: string;
+    addedBy: string;
+    photoUrls?: string[];
+  }
+) {
+  const title = input.title.trim();
+  const categoryName = input.category.trim();
+  const addedBy = input.addedBy.trim();
+
+  if (!title || !categoryName || !addedBy) {
+    throw new Error("All fields are required");
+  }
+
+  const category = await findOrCreateCategory(categoryName);
+
+  if (input.photoUrls && input.photoUrls.length > 0) {
+    const [existing] = await db
+      .select({ photoUrls: recipes.photoUrls })
+      .from(recipes)
+      .where(eq(recipes.id, id))
+      .limit(1);
+
+    await db
+      .update(recipes)
+      .set({
+        title,
+        categoryId: category.id,
+        addedBy,
+        photoUrls: input.photoUrls,
+      })
+      .where(eq(recipes.id, id));
+
+    if (existing?.photoUrls?.length) {
+      await del(existing.photoUrls).catch(() => {});
+    }
+  } else {
+    await db
+      .update(recipes)
+      .set({ title, categoryId: category.id, addedBy })
+      .where(eq(recipes.id, id));
+  }
+
+  revalidatePath("/");
+  revalidatePath(`/recipes/${id}`);
+}
+
+export async function deleteRecipe(id: string) {
+  const [existing] = await db
+    .select({ photoUrls: recipes.photoUrls })
+    .from(recipes)
+    .where(eq(recipes.id, id))
+    .limit(1);
+
+  await db.delete(recipes).where(eq(recipes.id, id));
+
+  if (existing?.photoUrls?.length) {
+    await del(existing.photoUrls).catch(() => {});
+  }
+
+  revalidatePath("/");
 }
