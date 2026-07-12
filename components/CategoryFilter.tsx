@@ -5,14 +5,18 @@ type Category = { name: string; slug: string };
 export function CategoryFilter({
   categories,
   activeSlug,
+  searchQuery,
 }: {
   categories: Category[];
   activeSlug?: string;
+  searchQuery?: string;
 }) {
+  const querySuffix = searchQuery ? `q=${encodeURIComponent(searchQuery)}` : "";
+
   return (
     <div className="flex flex-wrap gap-2">
       <Link
-        href="/"
+        href={querySuffix ? `/?${querySuffix}` : "/"}
         className={`rounded-full px-3 py-1 text-sm ${
           !activeSlug
             ? "bg-foreground text-background"
@@ -24,7 +28,7 @@ export function CategoryFilter({
       {categories.map((category) => (
         <Link
           key={category.slug}
-          href={`/?category=${category.slug}`}
+          href={`/?category=${category.slug}${querySuffix ? `&${querySuffix}` : ""}`}
           className={`rounded-full px-3 py-1 text-sm ${
             activeSlug === category.slug
               ? "bg-foreground text-background"

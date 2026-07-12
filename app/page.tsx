@@ -3,17 +3,18 @@ import { getRecipes } from "@/actions/recipes";
 import { listCategories } from "@/actions/categories";
 import { RecipeList } from "@/components/RecipeList";
 import { CategoryFilter } from "@/components/CategoryFilter";
+import { SearchBox } from "@/components/SearchBox";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; q?: string }>;
 }) {
-  const { category } = await searchParams;
+  const { category, q } = await searchParams;
   const [recipes, categories] = await Promise.all([
-    getRecipes(category),
+    getRecipes(category, q),
     listCategories(),
   ]);
 
@@ -29,7 +30,8 @@ export default async function Home({
         </Link>
       </div>
 
-      <CategoryFilter categories={categories} activeSlug={category} />
+      <SearchBox defaultValue={q} category={category} />
+      <CategoryFilter categories={categories} activeSlug={category} searchQuery={q} />
       <RecipeList recipes={recipes} />
     </div>
   );

@@ -3,12 +3,30 @@
 import { db } from "@/lib/db";
 import { recipes, categories } from "@/lib/schema";
 import { findOrCreateCategory } from "@/actions/categories";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { del } from "@vercel/blob";
 
-export async function getRecipes(categorySlug?: string) {
-  const rows = await db
+export async function getRecipes(categorySlug?: string, searchQuery?: string) {
+  const conditions = [];
+
+  if (categorySlug) {
+    conditions.push(eq(categories.slug, categorySlug));
+  }
+
+  const query = searchQuery?.trim();
+  if (query) {
+    const pattern = `%${query}%`;
+    conditions.push(
+      or(
+        ilike(recipes.title, pattern),
+        ilike(recipes.ingredients, pattern),
+        ilike(recipes.notes, pattern)
+      )
+    );
+  }
+
+  return db
     .select({
       id: recipes.id,
       title: recipes.title,
@@ -21,10 +39,8 @@ export async function getRecipes(categorySlug?: string) {
     })
     .from(recipes)
     .innerJoin(categories, eq(recipes.categoryId, categories.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(recipes.createdAt));
-
-  if (!categorySlug) return rows;
-  return rows.filter((r) => r.categorySlug === categorySlug);
 }
 
 export async function getRecipeById(id: string) {
