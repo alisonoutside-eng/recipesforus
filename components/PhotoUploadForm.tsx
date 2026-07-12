@@ -57,8 +57,9 @@ export function PhotoUploadForm({ categories }: { categories: Category[] }) {
       const photoUrls: string[] = [];
       for (const file of files) {
         const compressed = await compressImage(file);
+        const jpegName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
         const uploadData = new FormData();
-        uploadData.set("file", compressed, file.name);
+        uploadData.set("file", compressed, jpegName);
 
         const response = await fetch("/api/upload", {
           method: "POST",
