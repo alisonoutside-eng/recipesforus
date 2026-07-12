@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { recipes, categories } from "@/lib/schema";
 import { findOrCreateCategory } from "@/actions/categories";
 import { desc, eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { del } from "@vercel/blob";
 
@@ -50,12 +49,19 @@ export async function getRecipeById(id: string) {
   return row;
 }
 
-export async function createTypedRecipe(formData: FormData) {
-  const title = String(formData.get("title") ?? "").trim();
-  const categoryName = String(formData.get("category") ?? "").trim();
-  const addedBy = String(formData.get("addedBy") ?? "").trim();
-  const ingredients = String(formData.get("ingredients") ?? "").trim();
-  const instructions = String(formData.get("instructions") ?? "").trim();
+export async function createTypedRecipe(input: {
+  title: string;
+  category: string;
+  addedBy: string;
+  ingredients: string;
+  instructions: string;
+  coverPhotoUrl?: string;
+}) {
+  const title = input.title.trim();
+  const categoryName = input.category.trim();
+  const addedBy = input.addedBy.trim();
+  const ingredients = input.ingredients.trim();
+  const instructions = input.instructions.trim();
 
   if (!title || !categoryName || !addedBy || !ingredients || !instructions) {
     throw new Error("All fields are required");
@@ -72,11 +78,12 @@ export async function createTypedRecipe(formData: FormData) {
       bodyType: "typed",
       ingredients,
       instructions,
+      photoUrls: input.coverPhotoUrl ? [input.coverPhotoUrl] : undefined,
     })
     .returning();
 
   revalidatePath("/");
-  redirect(`/recipes/${recipe.id}`);
+  return recipe.id as string;
 }
 
 export async function createPhotoRecipe(input: {
@@ -113,12 +120,22 @@ export async function createPhotoRecipe(input: {
   return recipe.id as string;
 }
 
-export async function updateTypedRecipe(id: string, formData: FormData) {
-  const title = String(formData.get("title") ?? "").trim();
-  const categoryName = String(formData.get("category") ?? "").trim();
-  const addedBy = String(formData.get("addedBy") ?? "").trim();
-  const ingredients = String(formData.get("ingredients") ?? "").trim();
-  const instructions = String(formData.get("instructions") ?? "").trim();
+export async function updateTypedRecipe(
+  id: string,
+  input: {
+    title: string;
+    category: string;
+    addedBy: string;
+    ingredients: string;
+    instructions: string;
+    coverPhotoUrl?: string;
+  }
+) {
+  const title = input.title.trim();
+  const categoryName = input.category.trim();
+  const addedBy = input.addedBy.trim();
+  const ingredients = input.ingredients.trim();
+  const instructions = input.instructions.trim();
 
   if (!title || !categoryName || !addedBy || !ingredients || !instructions) {
     throw new Error("All fields are required");
@@ -126,20 +143,37 @@ export async function updateTypedRecipe(id: string, formData: FormData) {
 
   const category = await findOrCreateCategory(categoryName);
 
-  await db
-    .update(recipes)
-    .set({
-      title,
-      categoryId: category.id,
-      addedBy,
-      ingredients,
-      instructions,
-    })
-    .where(eq(recipes.id, id));
+  if (input.coverPhotoUrl) {
+    const [existing] = await db
+      .select({ photoUrls: recipes.photoUrls })
+      .from(recipes)
+      .where(eq(recipes.id, id))
+      .limit(1);
+
+    await db
+      .update(recipes)
+      .set({
+        title,
+        categoryId: category.id,
+        addedBy,
+        ingredients,
+        instructions,
+        photoUrls: [input.coverPhotoUrl],
+      })
+      .where(eq(recipes.id, id));
+
+    if (existing?.photoUrls?.length) {
+      await del(existing.photoUrls).catch(() => {});
+    }
+  } else {
+    await db
+      .update(recipes)
+      .set({ title, categoryId: category.id, addedBy, ingredients, instructions })
+      .where(eq(recipes.id, id));
+  }
 
   revalidatePath("/");
   revalidatePath(`/recipes/${id}`);
-  redirect(`/recipes/${id}`);
 }
 
 export async function updatePhotoRecipe(

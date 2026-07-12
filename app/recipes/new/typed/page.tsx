@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { listCategories } from "@/actions/categories";
 import { TypedRecipeForm } from "@/components/TypedRecipeForm";
 
 export const dynamic = "force-dynamic";
 
-export default function NewTypedRecipePage() {
+export default async function NewTypedRecipePage() {
+  const categories = await listCategories();
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8">
       <Link
@@ -13,7 +16,7 @@ export default function NewTypedRecipePage() {
         ← Back
       </Link>
       <h1 className="text-2xl font-semibold">Type in a recipe</h1>
-      <TypedRecipeForm />
+      <TypedRecipeForm categories={categories} />
     </div>
   );
 }

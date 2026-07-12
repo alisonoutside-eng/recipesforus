@@ -65,6 +65,16 @@ export default async function RecipePage({
         </div>
       ) : (
         <div className="flex flex-col gap-6">
+          {recipe.photoUrls?.[0] && (
+            <Image
+              src={photoServingUrl(recipe.photoUrls[0])}
+              alt={recipe.title}
+              width={800}
+              height={600}
+              unoptimized
+              className="w-full rounded-xl object-cover"
+            />
+          )}
           <section>
             <h2 className="mb-2 font-semibold">Ingredients</h2>
             <p className="whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">

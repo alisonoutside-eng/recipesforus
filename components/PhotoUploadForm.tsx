@@ -3,33 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createPhotoRecipe, updatePhotoRecipe } from "@/actions/recipes";
+import { uploadImage } from "@/lib/compressImage";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
 import { AddedByField } from "@/components/AddedByField";
 
 type Category = { name: string; slug: string };
-
-async function compressImage(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file);
-  const maxDimension = 1600;
-  const scale = Math.min(
-    1,
-    maxDimension / Math.max(bitmap.width, bitmap.height)
-  );
-  const canvas = document.createElement("canvas");
-  canvas.width = bitmap.width * scale;
-  canvas.height = bitmap.height * scale;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-
-  return new Promise((resolve) => {
-    canvas.toBlob(
-      (blob) => resolve(blob ?? file),
-      "image/jpeg",
-      0.82
-    );
-  });
-}
 
 type PhotoUploadFormProps = {
   categories: Category[];
@@ -72,21 +50,7 @@ export function PhotoUploadForm({
     try {
       const photoUrls: string[] = [];
       for (const file of files) {
-        const compressed = await compressImage(file);
-        const jpegName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
-        const uploadData = new FormData();
-        uploadData.set("file", compressed, jpegName);
-
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: uploadData,
-        });
-        if (!response.ok) {
-          const body = await response.json().catch(() => null);
-          throw new Error(body?.error ?? "Upload failed");
-        }
-        const { pathname } = await response.json();
-        photoUrls.push(pathname);
+        photoUrls.push(await uploadImage(file));
       }
 
       if (recipeId) {

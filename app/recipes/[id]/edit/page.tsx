@@ -13,7 +13,10 @@ export default async function EditRecipePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const recipe = await getRecipeById(id);
+  const [recipe, categories] = await Promise.all([
+    getRecipeById(id),
+    listCategories(),
+  ]);
 
   if (!recipe) notFound();
 
@@ -29,6 +32,7 @@ export default async function EditRecipePage({
 
       {recipe.bodyType === "typed" ? (
         <TypedRecipeForm
+          categories={categories}
           recipeId={id}
           initialValues={{
             title: recipe.title,
@@ -36,11 +40,12 @@ export default async function EditRecipePage({
             addedBy: recipe.addedBy,
             ingredients: recipe.ingredients ?? "",
             instructions: recipe.instructions ?? "",
+            hasCoverPhoto: (recipe.photoUrls?.length ?? 0) > 0,
           }}
         />
       ) : (
         <PhotoUploadForm
-          categories={await listCategories()}
+          categories={categories}
           recipeId={id}
           initialValues={{
             title: recipe.title,
