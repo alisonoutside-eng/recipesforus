@@ -43,16 +43,6 @@ export default async function RecipePage({
 
       {recipe.bodyType === "photo" ? (
         <div className="flex flex-col gap-4">
-          {recipe.coverPhotoUrl && (
-            <Image
-              src={photoServingUrl(recipe.coverPhotoUrl)}
-              alt={`${recipe.title} (cover photo)`}
-              width={800}
-              height={600}
-              unoptimized
-              className="w-full rounded-xl object-cover"
-            />
-          )}
           {recipe.photoUrls?.map((url) => (
             <Image
               key={url}
@@ -72,19 +62,19 @@ export default async function RecipePage({
               </p>
             </section>
           )}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-6">
           {recipe.coverPhotoUrl && (
             <Image
               src={photoServingUrl(recipe.coverPhotoUrl)}
-              alt={recipe.title}
+              alt={`${recipe.title} (cover photo)`}
               width={800}
               height={600}
               unoptimized
               className="w-full rounded-xl object-cover"
             />
           )}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-6">
           <section>
             <h2 className="mb-2 font-semibold">Ingredients</h2>
             <p className="whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
@@ -97,6 +87,16 @@ export default async function RecipePage({
               {recipe.instructions}
             </p>
           </section>
+          {recipe.coverPhotoUrl && (
+            <Image
+              src={photoServingUrl(recipe.coverPhotoUrl)}
+              alt={recipe.title}
+              width={800}
+              height={600}
+              unoptimized
+              className="w-full rounded-xl object-cover"
+            />
+          )}
         </div>
       )}
     </div>
