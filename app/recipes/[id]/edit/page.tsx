@@ -46,6 +46,7 @@ export default async function EditRecipePage({
             title: recipe.title,
             categoryName: recipe.categoryName,
             addedBy: recipe.addedBy,
+            notes: recipe.notes,
           }}
         />
       )}

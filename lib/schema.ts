@@ -30,6 +30,7 @@ export const recipes = pgTable(
     ingredients: text("ingredients"),
     instructions: text("instructions"),
     photoUrls: text("photo_urls").array(),
+    notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

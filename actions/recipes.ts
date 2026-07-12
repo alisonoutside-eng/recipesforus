@@ -38,6 +38,7 @@ export async function getRecipeById(id: string) {
       ingredients: recipes.ingredients,
       instructions: recipes.instructions,
       photoUrls: recipes.photoUrls,
+      notes: recipes.notes,
       createdAt: recipes.createdAt,
       categoryName: categories.name,
     })
@@ -83,10 +84,12 @@ export async function createPhotoRecipe(input: {
   category: string;
   addedBy: string;
   photoUrls: string[];
+  notes?: string;
 }) {
   const title = input.title.trim();
   const categoryName = input.category.trim();
   const addedBy = input.addedBy.trim();
+  const notes = input.notes?.trim() || null;
 
   if (!title || !categoryName || !addedBy || input.photoUrls.length === 0) {
     throw new Error("All fields, and at least one photo, are required");
@@ -102,6 +105,7 @@ export async function createPhotoRecipe(input: {
       addedBy,
       bodyType: "photo",
       photoUrls: input.photoUrls,
+      notes,
     })
     .returning();
 
@@ -145,11 +149,13 @@ export async function updatePhotoRecipe(
     category: string;
     addedBy: string;
     photoUrls?: string[];
+    notes?: string;
   }
 ) {
   const title = input.title.trim();
   const categoryName = input.category.trim();
   const addedBy = input.addedBy.trim();
+  const notes = input.notes?.trim() || null;
 
   if (!title || !categoryName || !addedBy) {
     throw new Error("All fields are required");
@@ -171,6 +177,7 @@ export async function updatePhotoRecipe(
         categoryId: category.id,
         addedBy,
         photoUrls: input.photoUrls,
+        notes,
       })
       .where(eq(recipes.id, id));
 
@@ -180,7 +187,7 @@ export async function updatePhotoRecipe(
   } else {
     await db
       .update(recipes)
-      .set({ title, categoryId: category.id, addedBy })
+      .set({ title, categoryId: category.id, addedBy, notes })
       .where(eq(recipes.id, id));
   }
 

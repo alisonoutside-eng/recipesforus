@@ -38,6 +38,7 @@ type PhotoUploadFormProps = {
     title: string;
     categoryName: string;
     addedBy: string;
+    notes?: string | null;
   };
 };
 
@@ -60,6 +61,7 @@ export function PhotoUploadForm({
     const title = String(formData.get("title") ?? "");
     const category = String(formData.get("category") ?? "");
     const addedBy = String(formData.get("addedBy") ?? "");
+    const notes = String(formData.get("notes") ?? "");
 
     if (!title || !category || !addedBy || (!recipeId && files.length === 0)) {
       setError("Please fill in every field and choose at least one photo.");
@@ -92,6 +94,7 @@ export function PhotoUploadForm({
           title,
           category,
           addedBy,
+          notes,
           photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
         });
         router.push(`/recipes/${recipeId}`);
@@ -100,6 +103,7 @@ export function PhotoUploadForm({
           title,
           category,
           addedBy,
+          notes,
           photoUrls,
         });
         router.push(`/recipes/${newRecipeId}`);
@@ -154,6 +158,20 @@ export function PhotoUploadForm({
             {files.length} photo{files.length > 1 ? "s" : ""} selected
           </span>
         )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="notes" className="text-sm font-medium">
+          Notes or modifications (optional)
+        </label>
+        <textarea
+          id="notes"
+          name="notes"
+          rows={4}
+          defaultValue={initialValues?.notes ?? ""}
+          placeholder="e.g. I use half the sugar, or add 10 extra minutes at altitude"
+          className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+        />
       </div>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

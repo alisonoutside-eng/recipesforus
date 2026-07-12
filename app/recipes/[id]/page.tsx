@@ -54,6 +54,14 @@ export default async function RecipePage({
               className="w-full rounded-xl object-contain"
             />
           ))}
+          {recipe.notes && (
+            <section>
+              <h2 className="mb-2 font-semibold">Notes</h2>
+              <p className="whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
+                {recipe.notes}
+              </p>
+            </section>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-6">
