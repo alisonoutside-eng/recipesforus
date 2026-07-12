@@ -144,7 +144,6 @@ export function PhotoUploadForm({
           type="file"
           accept="image/*"
           multiple
-          capture="environment"
           onChange={(event) =>
             setFiles(Array.from(event.currentTarget.files ?? []))
           }
