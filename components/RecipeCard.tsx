@@ -32,6 +32,7 @@ export function RecipeCard({
           alt={title}
           width={72}
           height={72}
+          unoptimized
           className="h-18 w-18 shrink-0 rounded-lg object-cover"
         />
       ) : (

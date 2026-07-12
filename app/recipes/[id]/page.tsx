@@ -38,6 +38,7 @@ export default async function RecipePage({
               alt={recipe.title}
               width={800}
               height={1000}
+              unoptimized
               className="w-full rounded-xl object-contain"
             />
           ))}
