@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecipeById } from "@/actions/recipes";
+import { photoServingUrl } from "@/lib/photoUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function RecipePage({
           {recipe.photoUrls?.map((url) => (
             <Image
               key={url}
-              src={url}
+              src={photoServingUrl(url)}
               alt={recipe.title}
               width={800}
               height={1000}

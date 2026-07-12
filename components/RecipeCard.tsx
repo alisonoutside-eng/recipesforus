@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { photoServingUrl } from "@/lib/photoUrl";
 
 type RecipeCardProps = {
   id: string;
@@ -27,7 +28,7 @@ export function RecipeCard({
     >
       {thumbnail ? (
         <Image
-          src={thumbnail}
+          src={photoServingUrl(thumbnail)}
           alt={title}
           width={72}
           height={72}

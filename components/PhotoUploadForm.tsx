@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
 import { useState } from "react";
 import { createPhotoRecipe } from "@/actions/recipes";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
@@ -58,11 +57,19 @@ export function PhotoUploadForm({ categories }: { categories: Category[] }) {
       const photoUrls: string[] = [];
       for (const file of files) {
         const compressed = await compressImage(file);
-        const result = await upload(file.name, compressed, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
+        const uploadData = new FormData();
+        uploadData.set("file", compressed, file.name);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadData,
         });
-        photoUrls.push(result.url);
+        if (!response.ok) {
+          const body = await response.json().catch(() => null);
+          throw new Error(body?.error ?? "Upload failed");
+        }
+        const { pathname } = await response.json();
+        photoUrls.push(pathname);
       }
 
       const recipeId = await createPhotoRecipe({
