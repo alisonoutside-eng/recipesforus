@@ -40,7 +40,7 @@ export default async function EditRecipePage({
             addedBy: recipe.addedBy,
             ingredients: recipe.ingredients ?? "",
             instructions: recipe.instructions ?? "",
-            hasCoverPhoto: (recipe.photoUrls?.length ?? 0) > 0,
+            hasCoverPhoto: Boolean(recipe.coverPhotoUrl),
           }}
         />
       ) : (
@@ -52,6 +52,7 @@ export default async function EditRecipePage({
             categoryName: recipe.categoryName,
             addedBy: recipe.addedBy,
             notes: recipe.notes,
+            hasCoverPhoto: Boolean(recipe.coverPhotoUrl),
           }}
         />
       )}

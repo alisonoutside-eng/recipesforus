@@ -33,6 +33,7 @@ export async function getRecipes(categorySlug?: string, searchQuery?: string) {
       addedBy: recipes.addedBy,
       bodyType: recipes.bodyType,
       photoUrls: recipes.photoUrls,
+      coverPhotoUrl: recipes.coverPhotoUrl,
       createdAt: recipes.createdAt,
       categoryName: categories.name,
       categorySlug: categories.slug,
@@ -53,6 +54,7 @@ export async function getRecipeById(id: string) {
       ingredients: recipes.ingredients,
       instructions: recipes.instructions,
       photoUrls: recipes.photoUrls,
+      coverPhotoUrl: recipes.coverPhotoUrl,
       notes: recipes.notes,
       createdAt: recipes.createdAt,
       categoryName: categories.name,
@@ -94,7 +96,7 @@ export async function createTypedRecipe(input: {
       bodyType: "typed",
       ingredients,
       instructions,
-      photoUrls: input.coverPhotoUrl ? [input.coverPhotoUrl] : undefined,
+      coverPhotoUrl: input.coverPhotoUrl,
     })
     .returning();
 
@@ -107,6 +109,7 @@ export async function createPhotoRecipe(input: {
   category: string;
   addedBy: string;
   photoUrls: string[];
+  coverPhotoUrl?: string;
   notes?: string;
 }) {
   const title = input.title.trim();
@@ -128,6 +131,7 @@ export async function createPhotoRecipe(input: {
       addedBy,
       bodyType: "photo",
       photoUrls: input.photoUrls,
+      coverPhotoUrl: input.coverPhotoUrl,
       notes,
     })
     .returning();
@@ -161,7 +165,7 @@ export async function updateTypedRecipe(
 
   if (input.coverPhotoUrl) {
     const [existing] = await db
-      .select({ photoUrls: recipes.photoUrls })
+      .select({ coverPhotoUrl: recipes.coverPhotoUrl })
       .from(recipes)
       .where(eq(recipes.id, id))
       .limit(1);
@@ -174,12 +178,12 @@ export async function updateTypedRecipe(
         addedBy,
         ingredients,
         instructions,
-        photoUrls: [input.coverPhotoUrl],
+        coverPhotoUrl: input.coverPhotoUrl,
       })
       .where(eq(recipes.id, id));
 
-    if (existing?.photoUrls?.length) {
-      await del(existing.photoUrls).catch(() => {});
+    if (existing?.coverPhotoUrl) {
+      await del(existing.coverPhotoUrl).catch(() => {});
     }
   } else {
     await db
@@ -199,6 +203,7 @@ export async function updatePhotoRecipe(
     category: string;
     addedBy: string;
     photoUrls?: string[];
+    coverPhotoUrl?: string;
     notes?: string;
   }
 ) {
@@ -213,32 +218,34 @@ export async function updatePhotoRecipe(
 
   const category = await findOrCreateCategory(categoryName);
 
-  if (input.photoUrls && input.photoUrls.length > 0) {
-    const [existing] = await db
-      .select({ photoUrls: recipes.photoUrls })
-      .from(recipes)
-      .where(eq(recipes.id, id))
-      .limit(1);
+  const [existing] = await db
+    .select({
+      photoUrls: recipes.photoUrls,
+      coverPhotoUrl: recipes.coverPhotoUrl,
+    })
+    .from(recipes)
+    .where(eq(recipes.id, id))
+    .limit(1);
 
-    await db
-      .update(recipes)
-      .set({
-        title,
-        categoryId: category.id,
-        addedBy,
-        photoUrls: input.photoUrls,
-        notes,
-      })
-      .where(eq(recipes.id, id));
+  await db
+    .update(recipes)
+    .set({
+      title,
+      categoryId: category.id,
+      addedBy,
+      notes,
+      ...(input.photoUrls && input.photoUrls.length > 0
+        ? { photoUrls: input.photoUrls }
+        : {}),
+      ...(input.coverPhotoUrl ? { coverPhotoUrl: input.coverPhotoUrl } : {}),
+    })
+    .where(eq(recipes.id, id));
 
-    if (existing?.photoUrls?.length) {
-      await del(existing.photoUrls).catch(() => {});
-    }
-  } else {
-    await db
-      .update(recipes)
-      .set({ title, categoryId: category.id, addedBy, notes })
-      .where(eq(recipes.id, id));
+  if (input.photoUrls?.length && existing?.photoUrls?.length) {
+    await del(existing.photoUrls).catch(() => {});
+  }
+  if (input.coverPhotoUrl && existing?.coverPhotoUrl) {
+    await del(existing.coverPhotoUrl).catch(() => {});
   }
 
   revalidatePath("/");
@@ -247,7 +254,10 @@ export async function updatePhotoRecipe(
 
 export async function deleteRecipe(id: string) {
   const [existing] = await db
-    .select({ photoUrls: recipes.photoUrls })
+    .select({
+      photoUrls: recipes.photoUrls,
+      coverPhotoUrl: recipes.coverPhotoUrl,
+    })
     .from(recipes)
     .where(eq(recipes.id, id))
     .limit(1);
@@ -256,6 +266,9 @@ export async function deleteRecipe(id: string) {
 
   if (existing?.photoUrls?.length) {
     await del(existing.photoUrls).catch(() => {});
+  }
+  if (existing?.coverPhotoUrl) {
+    await del(existing.coverPhotoUrl).catch(() => {});
   }
 
   revalidatePath("/");

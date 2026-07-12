@@ -43,6 +43,16 @@ export default async function RecipePage({
 
       {recipe.bodyType === "photo" ? (
         <div className="flex flex-col gap-4">
+          {recipe.coverPhotoUrl && (
+            <Image
+              src={photoServingUrl(recipe.coverPhotoUrl)}
+              alt={`${recipe.title} (cover photo)`}
+              width={800}
+              height={600}
+              unoptimized
+              className="w-full rounded-xl object-cover"
+            />
+          )}
           {recipe.photoUrls?.map((url) => (
             <Image
               key={url}
@@ -65,9 +75,9 @@ export default async function RecipePage({
         </div>
       ) : (
         <div className="flex flex-col gap-6">
-          {recipe.photoUrls?.[0] && (
+          {recipe.coverPhotoUrl && (
             <Image
-              src={photoServingUrl(recipe.photoUrls[0])}
+              src={photoServingUrl(recipe.coverPhotoUrl)}
               alt={recipe.title}
               width={800}
               height={600}

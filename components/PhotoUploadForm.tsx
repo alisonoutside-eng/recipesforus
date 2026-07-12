@@ -17,6 +17,7 @@ type PhotoUploadFormProps = {
     categoryName: string;
     addedBy: string;
     notes?: string | null;
+    hasCoverPhoto?: boolean;
   };
 };
 
@@ -27,6 +28,7 @@ export function PhotoUploadForm({
 }: PhotoUploadFormProps) {
   const router = useRouter();
   const [files, setFiles] = useState<File[]>([]);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,6 +54,7 @@ export function PhotoUploadForm({
       for (const file of files) {
         photoUrls.push(await uploadImage(file));
       }
+      const coverPhotoUrl = coverFile ? await uploadImage(coverFile) : undefined;
 
       if (recipeId) {
         await updatePhotoRecipe(recipeId, {
@@ -60,6 +63,7 @@ export function PhotoUploadForm({
           addedBy,
           notes,
           photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
+          coverPhotoUrl,
         });
         router.push(`/recipes/${recipeId}`);
       } else {
@@ -69,6 +73,7 @@ export function PhotoUploadForm({
           addedBy,
           notes,
           photoUrls,
+          coverPhotoUrl,
         });
         router.push(`/recipes/${newRecipeId}`);
       }
@@ -136,6 +141,25 @@ export function PhotoUploadForm({
           placeholder="e.g. I use half the sugar, or add 10 extra minutes at altitude"
           className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
         />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="coverPhoto" className="text-sm font-medium">
+          {initialValues?.hasCoverPhoto
+            ? "Cover photo (leave empty to keep current) — shown on the recipe list"
+            : "Cover photo (optional) — shown on the recipe list"}
+        </label>
+        <input
+          id="coverPhoto"
+          type="file"
+          accept="image/*"
+          onChange={(event) => setCoverFile(event.currentTarget.files?.[0] ?? null)}
+          className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+        />
+        <span className="text-sm text-zinc-500 dark:text-zinc-400">
+          A photo of the finished dish, or anything else — separate from the
+          recipe photo(s) above
+        </span>
       </div>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

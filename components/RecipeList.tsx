@@ -7,6 +7,7 @@ type RecipeListItem = {
   categoryName: string;
   bodyType: string;
   photoUrls: string[] | null;
+  coverPhotoUrl: string | null;
 };
 
 export function RecipeList({ recipes }: { recipes: RecipeListItem[] }) {

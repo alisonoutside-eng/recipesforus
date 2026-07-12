@@ -8,6 +8,7 @@ type RecipeCardProps = {
   addedBy: string;
   categoryName: string;
   photoUrls: string[] | null;
+  coverPhotoUrl: string | null;
 };
 
 export function RecipeCard({
@@ -16,8 +17,9 @@ export function RecipeCard({
   addedBy,
   categoryName,
   photoUrls,
+  coverPhotoUrl,
 }: RecipeCardProps) {
-  const thumbnail = photoUrls?.[0];
+  const thumbnail = coverPhotoUrl ?? photoUrls?.[0];
 
   return (
     <Link
