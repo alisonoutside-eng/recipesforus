@@ -9,7 +9,7 @@ export function DeleteRecipeButton({ id }: { id: string }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleDelete() {
-    if (!confirm("Delete this recipe? This can't be undone.")) return;
+    if (!confirm("Delete this recipe? You can restore it from Trash later.")) return;
     setIsDeleting(true);
     try {
       await deleteRecipe(id);

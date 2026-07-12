@@ -33,6 +33,13 @@ export default async function Home({
       <SearchBox defaultValue={q} category={category} />
       <CategoryFilter categories={categories} activeSlug={category} searchQuery={q} />
       <RecipeList recipes={recipes} />
+
+      <Link
+        href="/trash"
+        className="self-start text-sm text-zinc-500 underline dark:text-zinc-400"
+      >
+        Trash
+      </Link>
     </div>
   );
 }

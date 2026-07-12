@@ -3,12 +3,12 @@
 import { db } from "@/lib/db";
 import { recipes, categories } from "@/lib/schema";
 import { findOrCreateCategory } from "@/actions/categories";
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, ilike, isNotNull, isNull, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { del } from "@vercel/blob";
 
 export async function getRecipes(categorySlug?: string, searchQuery?: string) {
-  const conditions = [];
+  const conditions = [isNull(recipes.deletedAt)];
 
   if (categorySlug) {
     conditions.push(eq(categories.slug, categorySlug));
@@ -22,7 +22,7 @@ export async function getRecipes(categorySlug?: string, searchQuery?: string) {
         ilike(recipes.title, pattern),
         ilike(recipes.ingredients, pattern),
         ilike(recipes.notes, pattern)
-      )
+      )!
     );
   }
 
@@ -40,7 +40,7 @@ export async function getRecipes(categorySlug?: string, searchQuery?: string) {
     })
     .from(recipes)
     .innerJoin(categories, eq(recipes.categoryId, categories.id))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(desc(recipes.createdAt));
 }
 
@@ -61,10 +61,25 @@ export async function getRecipeById(id: string) {
     })
     .from(recipes)
     .innerJoin(categories, eq(recipes.categoryId, categories.id))
-    .where(eq(recipes.id, id))
+    .where(and(eq(recipes.id, id), isNull(recipes.deletedAt)))
     .limit(1);
 
   return row;
+}
+
+export async function getTrashedRecipes() {
+  return db
+    .select({
+      id: recipes.id,
+      title: recipes.title,
+      addedBy: recipes.addedBy,
+      categoryName: categories.name,
+      deletedAt: recipes.deletedAt,
+    })
+    .from(recipes)
+    .innerJoin(categories, eq(recipes.categoryId, categories.id))
+    .where(isNotNull(recipes.deletedAt))
+    .orderBy(desc(recipes.deletedAt));
 }
 
 export async function createTypedRecipe(input: {
@@ -253,6 +268,26 @@ export async function updatePhotoRecipe(
 }
 
 export async function deleteRecipe(id: string) {
+  await db
+    .update(recipes)
+    .set({ deletedAt: new Date() })
+    .where(eq(recipes.id, id));
+
+  revalidatePath("/");
+  revalidatePath("/trash");
+}
+
+export async function restoreRecipe(id: string) {
+  await db
+    .update(recipes)
+    .set({ deletedAt: null })
+    .where(eq(recipes.id, id));
+
+  revalidatePath("/");
+  revalidatePath("/trash");
+}
+
+export async function permanentlyDeleteRecipe(id: string) {
   const [existing] = await db
     .select({
       photoUrls: recipes.photoUrls,
@@ -271,5 +306,5 @@ export async function deleteRecipe(id: string) {
     await del(existing.coverPhotoUrl).catch(() => {});
   }
 
-  revalidatePath("/");
+  revalidatePath("/trash");
 }

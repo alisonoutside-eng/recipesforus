@@ -35,6 +35,7 @@ export const recipes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => [
     index("recipes_category_id_idx").on(table.categoryId),
