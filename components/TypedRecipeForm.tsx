@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createTypedRecipe, updateTypedRecipe } from "@/actions/recipes";
 import { uploadImage } from "@/lib/compressImage";
+import { handleAutoListKeyDown } from "@/lib/autoList";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
 import { AddedByField } from "@/components/AddedByField";
 
@@ -127,6 +128,7 @@ export function TypedRecipeForm({
           required
           rows={8}
           defaultValue={initialValues?.instructions}
+          onKeyDown={handleAutoListKeyDown}
           placeholder="1. Preheat oven to..."
           className="rounded-lg border border-black/15 px-3 py-2 dark:border-white/20 dark:bg-transparent"
         />
